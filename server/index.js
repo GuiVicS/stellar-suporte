@@ -1,0 +1,112 @@
+import express from "express";
+import path from "path";
+import fs from "fs";
+import cookieParser from "cookie-parser";
+import installRouter from "./routes/install.js";
+import authRouter from "./routes/auth.js";
+import customersRouter from "./routes/customers.js";
+import serviceOrdersRouter from "./routes/serviceOrders.js";
+import checklistRouter from "./routes/checklist.js";
+import timelineRouter from "./routes/timeline.js";
+import partsRouter from "./routes/parts.js";
+import notificationsRouter from "./routes/notifications.js";
+import profilesRouter from "./routes/profiles.js";
+import { isInstalled } from "./config/installState.js";
+import { getPool } from "./db/client.js";
+import { authMiddleware, requireAuth } from "./middleware/auth.js";
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+app.use(cookieParser());
+app.use(authMiddleware);
+
+// Healthcheck simples - sempre 200
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+// Readiness - só 200 se instalado + DB ok
+app.get("/api/ready", async (req, res) => {
+  if (!isInstalled()) {
+    return res.status(503).json({
+      status: "not_installed",
+      message: "Aplicação ainda não instalada. Acesse /install.",
+    });
+  }
+
+  try {
+    const pool = getPool();
+    await pool.query("SELECT 1");
+    return res.json({ status: "ok" });
+  } catch (err) {
+    console.error("[ready] Falha ao verificar banco:", err.message);
+    return res.status(503).json({
+      status: "db_error",
+      message: "Banco de dados indisponível.",
+    });
+  }
+});
+
+// Rotas de instalação e autenticação
+app.use("/api/install", installRouter);
+app.use("/api/auth", authRouter);
+
+// Rotas de domínio (protegem por papel onde faz sentido)
+app.use("/api/customers", requireAuth(["admin", "gerente"]), customersRouter);
+app.use("/api/service-orders", requireAuth(["admin", "gerente", "tecnico"]), serviceOrdersRouter);
+app.use("/api/checklist", requireAuth(["admin", "gerente", "tecnico"]), checklistRouter);
+app.use("/api/timeline", requireAuth(["admin", "gerente", "tecnico"]), timelineRouter);
+app.use("/api/parts", requireAuth(["admin", "gerente", "tecnico"]), partsRouter);
+app.use("/api/notifications", requireAuth(["admin", "gerente", "tecnico"]), notificationsRouter);
+app.use("/api/profiles", requireAuth(["admin", "gerente"]), profilesRouter);
+
+// Middleware para forçar /install quando não instalado
+app.use((req, res, next) => {
+  const url = req.url;
+  const installed = isInstalled();
+
+  const isAsset =
+    url.startsWith("/assets/") ||
+    url.startsWith("/pwa-") ||
+    url.endsWith(".js") ||
+    url.endsWith(".css") ||
+    url.endsWith(".ico") ||
+    url.endsWith(".svg") ||
+    url.endsWith(".png") ||
+    url.endsWith(".jpg") ||
+    url.endsWith(".woff2");
+
+  const isInstallRoute = url === "/install" || url.startsWith("/api/install");
+
+  if (!installed && !isAsset && !isInstallRoute) {
+    return res.redirect("/install");
+  }
+
+  if (installed && url === "/install") {
+    return res.redirect("/");
+  }
+
+  next();
+});
+
+// Servir frontend buildado
+const __dirnameResolved = path.dirname(new URL(import.meta.url).pathname);
+const distPath = path.resolve(__dirnameResolved, "..", "dist");
+
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+
+  // SPA fallback
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+} else {
+  console.warn("[server] Pasta dist/ não encontrada. Rode `npm run build` antes de iniciar em produção.");
+}
+
+app.listen(PORT, () => {
+  console.log(`[server] Rodando em http://0.0.0.0:${PORT}`);
+});
+

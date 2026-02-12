@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@layer base {
+  /* Prevent iOS zoom on input focus */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 220 13% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 13%;
+
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 13% 13%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 24 95% 53%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 24 95% 53%;
+
+    --radius: 0.5rem;
+
+    /* Status colors */
+    --status-pending: 43 96% 56%;
+    --status-pending-foreground: 0 0% 100%;
+    --status-transit: 24 95% 53%;
+    --status-transit-foreground: 0 0% 100%;
+    --status-active: 263 70% 58%;
+    --status-active-foreground: 0 0% 100%;
+    --status-waiting: 37 91% 55%;
+    --status-waiting-foreground: 0 0% 100%;
+    --status-done: 160 84% 39%;
+    --status-done-foreground: 0 0% 100%;
+    --status-cancelled: 220 9% 46%;
+    --status-cancelled-foreground: 0 0% 100%;
+
+    /* Priority */
+    --priority-low: 160 84% 39%;
+    --priority-medium: 43 96% 56%;
+    --priority-high: 24 95% 53%;
+    --priority-urgent: 0 84% 60%;
+
+    /* Sidebar */
+    --sidebar-background: 220 16% 10%;
+    --sidebar-foreground: 220 14% 80%;
+    --sidebar-primary: 24 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 16%;
+    --sidebar-accent-foreground: 220 14% 90%;
+    --sidebar-border: 220 14% 18%;
+    --sidebar-ring: 24 95% 53%;
+
+    /* Brand */
+    --brand-gradient: linear-gradient(135deg, hsl(24, 95%, 53%) 0%, hsl(32, 98%, 56%) 100%);
+    --shadow-card: 0 1px 2px 0 hsl(220 13% 13% / 0.04);
+    --shadow-elevated: 0 4px 12px -2px hsl(220 13% 13% / 0.08), 0 2px 4px -2px hsl(220 13% 13% / 0.04);
+  }
+
+  .dark {
+    --background: 220 16% 7%;
+    --foreground: 220 14% 93%;
+
+    --card: 220 16% 10%;
+    --card-foreground: 220 14% 93%;
+
+    --popover: 220 16% 10%;
+    --popover-foreground: 220 14% 93%;
+
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 16%;
+    --secondary-foreground: 220 14% 93%;
+
+    --muted: 220 14% 14%;
+    --muted-foreground: 220 9% 55%;
+
+    --accent: 24 95% 53%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 220 14% 96%;
+
+    --border: 220 14% 18%;
+    --input: 220 14% 18%;
+    --ring: 24 95% 53%;
+
+    --sidebar-background: 220 18% 5%;
+    --sidebar-foreground: 220 12% 75%;
+    --sidebar-primary: 24 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 12%;
+    --sidebar-accent-foreground: 220 12% 85%;
+    --sidebar-border: 220 14% 14%;
+    --sidebar-ring: 24 95% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight text-foreground;
+  }
+}
+
+@layer components {
+  .brand-gradient {
+    background: var(--brand-gradient);
+  }
+
+  .brand-gradient-text {
+    background: var(--brand-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .status-badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide;
+  }
+
+  .mobile-action-btn {
+    @apply flex flex-col items-center justify-center gap-1 px-4 py-3 rounded-xl text-xs font-medium transition-all active:scale-95;
+  }
+
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
