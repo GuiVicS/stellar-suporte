@@ -13,7 +13,9 @@ export async function apiRequest<T>(
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const message = (data && (data.error || data.message)) || "Erro ao comunicar com o servidor.";
+    const message =
+      (data && (data.error || data.message)) ||
+      "Erro ao comunicar com o servidor.";
     throw new Error(message);
   }
   return data as T;
@@ -47,4 +49,3 @@ export function apiPatch<T>(path: string, body?: unknown) {
 export function apiDelete<T>(path: string) {
   return apiRequest<T>(path, { method: "DELETE" });
 }
-
