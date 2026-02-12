@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL DEFAULT '',
   phone TEXT DEFAULT '',
   avatar_url TEXT DEFAULT '',
   active BOOLEAN DEFAULT true,
@@ -20,8 +21,18 @@ CREATE TABLE IF NOT EXISTS profiles (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Papéis
-CREATE TYPE IF NOT EXISTS app_role AS ENUM ('admin', 'gerente', 'tecnico');
+-- Papéis (tabela de referência)
+CREATE TABLE IF NOT EXISTS roles (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL
+);
+
+-- Tipo enum para papéis
+DO $$ BEGIN
+  CREATE TYPE app_role AS ENUM ('admin', 'gerente', 'tecnico');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -70,9 +81,23 @@ CREATE TABLE IF NOT EXISTS machines (
 );
 
 -- Enums de OS
-CREATE TYPE IF NOT EXISTS os_type AS ENUM ('instalacao', 'corretiva', 'preventiva', 'treinamento');
-CREATE TYPE IF NOT EXISTS os_status AS ENUM ('a_fazer', 'em_deslocamento', 'em_atendimento', 'aguardando_peca', 'concluido', 'cancelado');
-CREATE TYPE IF NOT EXISTS priority AS ENUM ('baixa', 'media', 'alta', 'urgente');
+DO $$ BEGIN
+  CREATE TYPE os_type AS ENUM ('instalacao', 'corretiva', 'preventiva', 'treinamento');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE os_status AS ENUM ('a_fazer', 'em_deslocamento', 'em_atendimento', 'aguardando_peca', 'concluido', 'cancelado');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE priority AS ENUM ('baixa', 'media', 'alta', 'urgente');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Ordens de serviço
 CREATE TABLE IF NOT EXISTS service_orders (
@@ -117,7 +142,11 @@ CREATE TABLE IF NOT EXISTS checklist_items (
 );
 
 -- Evidências
-CREATE TYPE IF NOT EXISTS evidence_kind AS ENUM ('photo', 'audio', 'file');
+DO $$ BEGIN
+  CREATE TYPE evidence_kind AS ENUM ('photo', 'audio', 'file');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS evidences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

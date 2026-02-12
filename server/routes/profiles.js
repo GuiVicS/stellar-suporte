@@ -9,9 +9,17 @@ router.get("/", async (req, res) => {
     const rows = await withClient(async (client) => {
       const result = await client.query(
         `
-        SELECT *
-        FROM profiles
-        ORDER BY name ASC
+        SELECT
+          p.*,
+          u.email,
+          u.name AS user_name,
+          COALESCE(
+            (SELECT ur.role FROM user_roles ur WHERE ur.user_id = p.user_id LIMIT 1),
+            'tecnico'
+          ) AS role
+        FROM profiles p
+        JOIN users u ON u.id = p.user_id
+        ORDER BY p.name ASC
         `
       );
       return result.rows;
@@ -31,8 +39,11 @@ router.get("/technicians", async (req, res) => {
         `
         SELECT
           p.*,
+          u.email,
+          u.name AS user_name,
           ur.role
         FROM profiles p
+        JOIN users u ON u.id = p.user_id
         JOIN user_roles ur ON ur.user_id = p.user_id
         WHERE ur.role = 'tecnico'
           AND p.active = true
@@ -51,7 +62,7 @@ router.get("/technicians", async (req, res) => {
 // PATCH /api/profiles/:id
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
-  const { active, phone, avatar_url } = req.body || {};
+  const { active, phone, avatar_url, name } = req.body || {};
 
   const setClauses = [];
   const values = [];
@@ -68,6 +79,10 @@ router.patch("/:id", async (req, res) => {
   if (typeof avatar_url === "string") {
     setClauses.push(`avatar_url = $${idx++}`);
     values.push(avatar_url);
+  }
+  if (typeof name === "string") {
+    setClauses.push(`name = $${idx++}`);
+    values.push(name);
   }
 
   if (setClauses.length === 0) {

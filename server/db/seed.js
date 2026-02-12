@@ -1,10 +1,13 @@
+import bcrypt from "bcryptjs";
 import { withClient } from "./client.js";
+
+const BCRYPT_ROUNDS = 12;
 
 export async function runSeed({ adminEmail, adminPassword, adminName } = {}) {
   await withClient(async (client) => {
     console.log("[seed] Iniciando seed de dados básicos...");
 
-    // Exemplo de tabelas mínimas; devem corresponder ao schema definido nas migrations
+    // Tabela de referência de papéis
     await client.query(`
       INSERT INTO roles (id, name)
       VALUES 
@@ -15,8 +18,9 @@ export async function runSeed({ adminEmail, adminPassword, adminName } = {}) {
     `);
 
     if (adminEmail && adminPassword) {
-      // Usuário admin inicial; senha em texto simples aqui é apenas placeholder.
-      // Em produção, deve-se usar hash (ex: bcrypt) – pode ser evoluído depois.
+      const hashedPassword = await bcrypt.hash(adminPassword, BCRYPT_ROUNDS);
+      const adminFullName = adminName || "Admin";
+
       const res = await client.query(
         `
         INSERT INTO users (email, password, name)
@@ -24,11 +28,21 @@ export async function runSeed({ adminEmail, adminPassword, adminName } = {}) {
         ON CONFLICT (email) DO NOTHING
         RETURNING id;
       `,
-        [adminEmail, adminPassword, adminName || "Admin"]
+        [adminEmail, hashedPassword, adminFullName]
       );
 
       const userId = res.rows[0]?.id;
       if (userId) {
+        // Criar perfil para o admin
+        await client.query(
+          `
+          INSERT INTO profiles (user_id, name, active)
+          VALUES ($1, $2, true)
+          ON CONFLICT (user_id) DO NOTHING;
+        `,
+          [userId, adminFullName]
+        );
+
         await client.query(
           `
           INSERT INTO user_roles (user_id, role)

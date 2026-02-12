@@ -30,8 +30,11 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
+      PORT: 3000
       # DATABASE_URL pode ser sobrescrito via ENV externa se desejado
       DATABASE_URL: postgres://app:app@postgres:5432/app
+      # Chave usada para criptografar databaseUrl no config.json (mude em produção!)
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-stellar-change-me-in-production}
     ports:
       - "3000:3000"
     volumes:
