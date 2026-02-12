@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+.vscode
+.idea
+coverage
+
+supabase
+vitest.config.ts
+tsconfig*.json
+tailwind.config.ts
+postcss.config.js
+eslint.config.js
+

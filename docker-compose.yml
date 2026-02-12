@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: stellar_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stellar_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      # DATABASE_URL pode ser sobrescrito via ENV externa se desejado
+      DATABASE_URL: postgres://app:app@postgres:5432/app
+    ports:
+      - "3000:3000"
+    volumes:
+      - appdata:/data
+    healthcheck:
+      # /api/ready será implementado no backend; por enquanto, aceitar falhas iniciais
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+  appdata:
+
