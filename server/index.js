@@ -64,27 +64,24 @@ app.use("/api/profiles", requireAuth(["admin", "gerente"]), profilesRouter);
 
 // Middleware para forçar /install quando não instalado
 app.use((req, res, next) => {
-  const url = req.url;
+  const p = req.path;
   const installed = isInstalled();
 
-  const isAsset =
-    url.startsWith("/assets/") ||
-    url.startsWith("/pwa-") ||
-    url.endsWith(".js") ||
-    url.endsWith(".css") ||
-    url.endsWith(".ico") ||
-    url.endsWith(".svg") ||
-    url.endsWith(".png") ||
-    url.endsWith(".jpg") ||
-    url.endsWith(".woff2");
+  // Rotas da API e health são tratadas pelos seus próprios handlers
+  if (p.startsWith("/api/")) return next();
 
-  const isInstallRoute = url === "/install" || url.startsWith("/api/install");
+  // Assets estáticos sempre passam (para express.static servir)
+  const ext = path.extname(p);
+  if (ext && ext !== ".html") return next();
 
-  if (!installed && !isAsset && !isInstallRoute) {
+  // Rotas relacionadas a install
+  const isInstallRoute = p === "/install" || p.startsWith("/install/");
+
+  if (!installed && !isInstallRoute) {
     return res.redirect("/install");
   }
 
-  if (installed && url === "/install") {
+  if (installed && isInstallRoute) {
     return res.redirect("/");
   }
 
@@ -92,18 +89,36 @@ app.use((req, res, next) => {
 });
 
 // Servir frontend buildado
-const __dirnameResolved = path.dirname(new URL(import.meta.url).pathname);
-const distPath = path.resolve(__dirnameResolved, "..", "dist");
+// process.cwd() retorna /app no container (WORKDIR do Dockerfile)
+const distPath = path.resolve(process.cwd(), "dist");
+
+console.log("[server] distPath resolvido:", distPath);
+console.log("[server] dist/ existe?", fs.existsSync(distPath));
 
 if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
+  // Servir assets estáticos com cache
+  app.use(
+    express.static(distPath, {
+      maxAge: "1d",
+      index: false, // Não servir index.html automaticamente para "/"
+    })
+  );
 
-  // SPA fallback
+  // SPA fallback – qualquer rota que não seja /api retorna index.html
   app.get("*", (req, res) => {
+    if (req.path.startsWith("/api")) {
+      return res.status(404).json({ error: "Rota não encontrada." });
+    }
     res.sendFile(path.join(distPath, "index.html"));
   });
 } else {
   console.warn("[server] Pasta dist/ não encontrada. Rode `npm run build` antes de iniciar em produção.");
+  app.get("*", (req, res) => {
+    if (req.path.startsWith("/api")) {
+      return res.status(404).json({ error: "Rota não encontrada." });
+    }
+    res.status(500).send("Erro: frontend não foi compilado. Execute npm run build.");
+  });
 }
 
 app.listen(PORT, () => {
