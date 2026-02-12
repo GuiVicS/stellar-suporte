@@ -1,3 +1,5 @@
+/** HTTP client helpers – apiGet, apiPost, apiPut, apiPatch, apiDelete */
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {}
@@ -13,7 +15,9 @@ export async function apiRequest<T>(
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const message = (data && (data.error || data.message)) || "Erro ao comunicar com o servidor.";
+    const message =
+      (data && (data.error || data.message)) ||
+      "Erro ao comunicar com o servidor.";
     throw new Error(message);
   }
   return data as T;
@@ -37,7 +41,13 @@ export function apiPut<T>(path: string, body?: unknown) {
   });
 }
 
+export function apiPatch<T>(path: string, body?: unknown) {
+  return apiRequest<T>(path, {
+    method: "PATCH",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
 export function apiDelete<T>(path: string) {
   return apiRequest<T>(path, { method: "DELETE" });
 }
-

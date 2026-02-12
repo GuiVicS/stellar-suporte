@@ -30,18 +30,21 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
+      PORT: 3000
       # DATABASE_URL pode ser sobrescrito via ENV externa se desejado
       DATABASE_URL: postgres://app:app@postgres:5432/app
+      # Chave usada para criptografar databaseUrl no config.json (mude em produção!)
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-stellar-change-me-in-production}
     ports:
       - "3000:3000"
     volumes:
       - appdata:/data
     healthcheck:
-      # /api/ready será implementado no backend; por enquanto, aceitar falhas iniciais
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/ready || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 10
+      start_period: 20s
+      retries: 5
 
 volumes:
   pgdata:

@@ -1,4 +1,5 @@
 import express from "express";
+import bcrypt from "bcryptjs";
 import { withClient } from "../db/client.js";
 import { authMiddleware, createSession, destroySession } from "../middleware/auth.js";
 
@@ -23,7 +24,12 @@ router.post("/login", async (req, res) => {
       return rows[0] || null;
     });
 
-    if (!user || user.password !== password) {
+    if (!user) {
+      return res.status(401).json({ error: "Credenciais inválidas." });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
       return res.status(401).json({ error: "Credenciais inválidas." });
     }
 
