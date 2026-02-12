@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { withClient } from "../db/client.js";
+import { isInstalled } from "../config/installState.js";
 
 function parseCookies(header) {
   const result = {};
@@ -15,6 +16,12 @@ function parseCookies(header) {
 
 export async function authMiddleware(req, res, next) {
   try {
+    // Se o app ainda não está instalado, não há tabelas de sessions/users
+    if (!isInstalled()) {
+      req.user = null;
+      return next();
+    }
+
     const cookies = parseCookies(req.headers.cookie || "");
     const token = cookies["session_token"];
     if (!token) {

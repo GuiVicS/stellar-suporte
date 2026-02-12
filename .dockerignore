@@ -14,18 +14,15 @@ coverage
 # Supabase (não usado no modo Docker)
 supabase
 
-# Arquivos de configuração de dev
+# Arquivos somente de dev (NÃO excluir tsconfig/tailwind/postcss - necessários para build)
 vitest.config.ts
-tsconfig*.json
-tailwind.config.ts
-postcss.config.js
 eslint.config.js
-components.json
 
 # Env files (segurança - não copiar para imagem)
 .env
-.env.*
-!.env.example
+.env.local
+.env.development
+.env.production
 
 # Testes
 src/test
