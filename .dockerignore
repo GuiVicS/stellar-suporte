@@ -31,8 +31,13 @@ src/test
 *.spec.ts
 *.spec.tsx
 
+# Lockfiles (npm install gera novo no build)
+package-lock.json
+pnpm-lock.yaml
+bun.lockb
+yarn.lock
+
 # Outros
 *.md
-bun.lockb
 LICENSE
 
