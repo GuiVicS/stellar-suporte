@@ -1,3 +1,5 @@
+/** HTTP client helpers – apiGet, apiPost, apiPut, apiPatch, apiDelete */
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {}
