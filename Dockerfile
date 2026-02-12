@@ -3,8 +3,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Instala dependências para build
-COPY package*.json ./
-RUN npm ci
+COPY package.json ./
+RUN npm install
 
 # Copia código-fonte e gera build do frontend
 COPY . .
@@ -22,8 +22,8 @@ ENV NODE_ENV=production
 RUN apk add --no-cache wget
 
 # Instala apenas dependências de produção
-COPY package*.json ./
-RUN npm ci --omit=dev
+COPY package.json ./
+RUN npm install --omit=dev
 
 # Copia arquivos necessários para runtime
 COPY --from=builder /app/dist ./dist
